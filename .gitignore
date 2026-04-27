@@ -1,0 +1,30 @@
+# --- Build Artifacts ---
+target/
+build/
+bin/
+out/
+
+# --- Maven Specific ---
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# --- IDEs ---
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
