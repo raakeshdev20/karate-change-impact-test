@@ -3,7 +3,7 @@
 TARGET_URL=${DEV_URL:-"http://localhost:8080"}
 
 # 1. Get the JSON response
-RESPONSE=$(curl -s "$TARGET_URL/api/dev-ops/test-selector?targetBranch=main")
+RESPONSE=$(curl -s "$TARGET_URL/api/dev-ops/test-selector?targetBranch=main~1")
 
 echo "------------------------------------------"
 echo "DEBUG: Raw API Response from Fintech App: $RESPONSE"
