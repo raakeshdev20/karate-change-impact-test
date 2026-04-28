@@ -1,0 +1,24 @@
+name: Executing Impacted Tests
+on:
+  repository_dispatch:
+    types: [dev_push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Karate Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important for JGit to see the history
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Run Impacted Tests
+        run: |
+          chmod +x run-impacted-test.sh
+          ./run-impacted-test.sh
