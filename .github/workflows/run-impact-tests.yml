@@ -19,6 +19,7 @@ jobs:
           repository: ${{ github.repository_owner }}/fintech-impact-services
           path: dev-app
           token: ${{ secrets.KARATE_REPO_PAT }}
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
