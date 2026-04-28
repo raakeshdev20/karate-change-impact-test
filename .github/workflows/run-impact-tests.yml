@@ -42,3 +42,11 @@ jobs:
         run: |
           chmod +x run-impacted-test.sh
           ./run-impacted-test.sh
+
+      #4. upload karate html reports
+      - name: Upload Karate Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+            name: karate-html-report
+            path: target/karate-reports/
