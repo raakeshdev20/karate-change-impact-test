@@ -10,14 +10,34 @@ jobs:
       - name: Checkout Karate Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Important for JGit to see the history
+          fetch-depth: 0
+
+      # 1. Pull the Dev code using your specific repo name
+      - name: Checkout Banking Dev Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/fintech-impact-services
+          path: dev-app
+          token: ${{ secrets.KARATE_REPO_PAT }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'maven'
 
+      # 2. Start the Spring Boot app in the background
+      - name: Start Banking Application
+        run: |
+          cd dev-app
+          mvn spring-boot:run & 
+          echo "Waiting for Fintech Service to start on port 8080..."
+          # Wait up to 60 seconds for the port to open
+          timeout 60s bash -c 'until printf "" 2>>/dev/null >>/dev/tcp/127.0.0.1/8080; do sleep 2; done'
+          echo "Fintech Service is LIVE!"
+
+      # 3. Run your Impact Analysis and Tests
       - name: Run Impacted Tests
         run: |
           chmod +x run-impacted-test.sh
