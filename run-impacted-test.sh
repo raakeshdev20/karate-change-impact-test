@@ -5,6 +5,10 @@ TARGET_URL=${DEV_URL:-"http://localhost:8080"}
 # 1. Get the JSON response
 RESPONSE=$(curl -s "$TARGET_URL/api/dev-ops/test-selector?targetBranch=main")
 
+echo "------------------------------------------"
+echo "DEBUG: Raw API Response from Fintech App: $RESPONSE"
+echo "------------------------------------------"
+
 # 2. Extract tags using a more flexible sed pattern
 TAGS=$(echo $RESPONSE | sed -n 's/.*"impacted_tags":\[\([^]]*\)\].*/\1/p' | sed 's/"//g')
 
