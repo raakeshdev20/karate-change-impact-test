@@ -14,5 +14,6 @@ if [ ! -z "$TAGS" ] && [ "$TAGS" != "null" ] && [ "$TAGS" != "" ]; then
     # Run maven with the extracted tags
     mvn test -Dkarate.options="--tags $TAGS"
 else
-    echo "No impact found or parsing failed."
+    echo "No impact found or parsing failed.Running smoke"
+    mvn test -Dkarate.options="--tags @smoke"
 fi
