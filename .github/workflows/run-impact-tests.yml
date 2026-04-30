@@ -51,3 +51,10 @@ jobs:
         with:
             name: karate-html-report
             path: target/karate-reports/
+
+      #5. upload Metrics
+      - name: Upload Test Metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: impact-metrics
+          path: metrics.json

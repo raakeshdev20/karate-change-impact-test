@@ -3,8 +3,11 @@
 TARGET_URL=${DEV_URL:-"http://localhost:8080"}
 
 # --- START PHASE 1 METRICS ---
-START_TIME=$(date +%s)
-TOTAL_SUITE_COUNT=18 # Our 3 feature files x 5 examples each and 3 smoke test
+# Total Suite: 3 features x 5 scenarios + 3 smoke tests
+TOTAL_SUITE_COUNT=18
+
+# [A] Start Global Workflow Clock
+WORKFLOW_START=$(date +%s)
 
 # 1. Get the JSON response
 # Using main~1 ensures we see the diff even on a direct push to main
@@ -26,16 +29,24 @@ else
     FINAL_TAGS="@smoke"
 fi
 
+# [B] Start Isolated Test Engine Clock
+TEST_START=$(date +%s)
+
 # 4. Run Maven and capture output to count executions
 mvn test -Dkarate.options="--tags $FINAL_TAGS" | tee test_output.log
 TEST_EXIT_CODE=$?
 
-# --- GENERATE METRICS ARTIFACT ---
-END_TIME=$(date +%s)
-DURATION=$((END_TIME - START_TIME))
+# [C] End Isolated Test Engine Clock
+TEST_END=$(date +%s)
 
-# Count how many of our 'Scenario Outline' examples actually ran
-# This looks for the 'Executing' string we added to the feature files
+# --- GENERATE METRICS ARTIFACT ---
+WORKFLOW_END=$(date +%s)
+
+# Calculate Durations
+TOTAL_DURATION=$((WORKFLOW_END - WORKFLOW_START))
+ISOLATED_TEST_DURATION=$((TEST_END - TEST_START))
+
+# Count Scenario executions
 RUN_COUNT=$(grep -c "Executing" test_output.log || echo 0)
 SKIPPED_COUNT=$((TOTAL_SUITE_COUNT - RUN_COUNT))
 
@@ -52,13 +63,18 @@ cat <<EOF > metrics.json
   "impacted_tags": "$FINAL_TAGS",
   "scenarios_executed": $RUN_COUNT,
   "scenarios_skipped": $SKIPPED_COUNT,
-  "execution_time_seconds": $DURATION,
-  "test_reduction_rate": "$REDUCTION%"
+  "test_reduction_rate": "$REDUCTION%",
+  "timing_metrics": {
+    "total_workflow_seconds": $TOTAL_DURATION,
+    "isolated_test_seconds": $ISOLATED_TEST_DURATION,
+    "api_overhead_seconds": $((TOTAL_DURATION - ISOLATED_TEST_DURATION))
+  }
 }
 EOF
 
 echo "------------------------------------------"
 echo "Reduction Rate: $REDUCTION%"
+echo "Isolated Test Time: ${ISOLATED_TEST_DURATION}s"
 echo "------------------------------------------"
 
 exit $TEST_EXIT_CODE
