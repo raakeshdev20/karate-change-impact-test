@@ -47,7 +47,7 @@ TOTAL_DURATION=$((WORKFLOW_END - WORKFLOW_START))
 ISOLATED_TEST_DURATION=$((TEST_END - TEST_START))
 
 # Count Scenario executions
-RUN_COUNT=$(grep -c "Executing" test_output.log || echo 0)
+RUN_COUNT=$(grep -c "Executing " test_output.log || echo 0)
 SKIPPED_COUNT=$((TOTAL_SUITE_COUNT - RUN_COUNT))
 
 # Calculate reduction percentage
