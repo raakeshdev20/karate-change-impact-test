@@ -4,7 +4,7 @@ TARGET_URL=${DEV_URL:-"http://localhost:8080"}
 
 # --- START PHASE 1 METRICS ---
 START_TIME=$(date +%s)
-TOTAL_SUITE_COUNT=15 # Our 3 feature files x 5 examples each
+TOTAL_SUITE_COUNT=18 # Our 3 feature files x 5 examples each and 3 smoke test
 
 # 1. Get the JSON response
 # Using main~1 ensures we see the diff even on a direct push to main
