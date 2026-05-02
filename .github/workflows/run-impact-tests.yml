@@ -9,11 +9,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # -----------------------------
+      # CHECKOUT KATARE REPO
+      # -----------------------------
       - name: Checkout Karate Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # -----------------------------
+      # CHECKOUT DEV REPO
+      # -----------------------------
       - name: Checkout Banking Dev Repo
         uses: actions/checkout@v4
         with:
@@ -22,6 +28,9 @@ jobs:
           token: ${{ secrets.KARATE_REPO_PAT }}
           fetch-depth: 0
 
+      # -----------------------------
+      # SETUP JAVA
+      # -----------------------------
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -30,30 +39,49 @@ jobs:
           cache: 'maven'
 
       # -----------------------------
-      # START SPRING BOOT
+      # START SPRING BOOT APP
       # -----------------------------
       - name: Start Banking Application
         run: |
           cd dev-app
+
+          echo "Starting Spring Boot application..."
           mvn spring-boot:run > app.log 2>&1 &
 
-          echo "Waiting for Impact API to be ready..."
+          echo "Waiting for Spring Boot startup..."
 
-          for i in {1..30}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              http://localhost:8080/api/dev-ops/test-selector?targetBranch=main~1)
-
-            if [ "$STATUS" = "200" ]; then
-              echo "✔ Spring Boot is READY"
+          # Wait for app to start (log-based check)
+          for i in {1..40}; do
+            if grep -q "Started" app.log; then
+              echo "✔ Spring Boot started"
               break
             fi
-
-            echo "Waiting... attempt $i"
+            echo "Waiting for startup... attempt $i"
             sleep 2
           done
 
+          echo "Waiting for API readiness..."
+
+          # Wait for API readiness
+          for i in {1..40}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              http://localhost:8080/api/dev-ops/test-selector?targetBranch=main~1)
+
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "400" ]; then
+              echo "✔ API is reachable"
+              break
+            fi
+
+            echo "Waiting for API... attempt $i"
+            sleep 2
+          done
+
+          echo "===== SPRING BOOT LOGS ====="
+          tail -n 50 app.log
+          echo "============================="
+
       # -----------------------------
-      # RUN IMPACT ANALYSIS
+      # RUN IMPACT TESTS
       # -----------------------------
       - name: Run Impacted Tests
         run: |
@@ -61,7 +89,7 @@ jobs:
           ./run-impacted-test.sh
 
       # -----------------------------
-      # ARTIFACTS
+      # UPLOAD REPORTS
       # -----------------------------
       - name: Upload Karate Reports
         if: always()
