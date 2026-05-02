@@ -1,4 +1,5 @@
 name: Executing Impacted Tests
+
 on:
   repository_dispatch:
     types: [dev_push]
@@ -6,13 +7,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Karate Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 1. Pull the Dev code using your specific repo name
       - name: Checkout Banking Dev Repo
         uses: actions/checkout@v4
         with:
@@ -28,32 +29,49 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # 2. Start the Spring Boot app in the background
+      # -----------------------------
+      # START SPRING BOOT
+      # -----------------------------
       - name: Start Banking Application
         run: |
           cd dev-app
-          mvn spring-boot:run & 
-          echo "Waiting for Fintech Service to start on port 8080..."
-          # Wait up to 60 seconds for the port to open
-          timeout 60s bash -c 'until printf "" 2>>/dev/null >>/dev/tcp/127.0.0.1/8080; do sleep 2; done'
-          echo "Fintech Service is LIVE!"
+          mvn spring-boot:run > app.log 2>&1 &
 
-      # 3. Run your Impact Analysis and Tests
+          echo "Waiting for Impact API to be ready..."
+
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              http://localhost:8080/api/dev-ops/test-selector?targetBranch=main~1)
+
+            if [ "$STATUS" = "200" ]; then
+              echo "✔ Spring Boot is READY"
+              break
+            fi
+
+            echo "Waiting... attempt $i"
+            sleep 2
+          done
+
+      # -----------------------------
+      # RUN IMPACT ANALYSIS
+      # -----------------------------
       - name: Run Impacted Tests
         run: |
           chmod +x run-impacted-test.sh
           ./run-impacted-test.sh
 
-      #4. upload karate html reports
+      # -----------------------------
+      # ARTIFACTS
+      # -----------------------------
       - name: Upload Karate Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: karate-html-report
-            path: target/karate-reports/
+          name: karate-html-report
+          path: target/karate-reports/
 
-      #5. upload Metrics
       - name: Upload Test Metrics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: impact-metrics

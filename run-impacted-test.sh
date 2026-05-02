@@ -2,55 +2,66 @@
 
 TARGET_URL=${DEV_URL:-"http://localhost:8080"}
 
-# --- START PHASE 1 METRICS ---
-# Total Suite: 3 features x 5 scenarios + 3 smoke tests
 TOTAL_SUITE_COUNT=18
 
-# [A] Start Global Workflow Clock
 WORKFLOW_START=$(date +%s)
 
-# 1. Get the JSON response
-# Using main~1 ensures we see the diff even on a direct push to main
-RESPONSE=$(curl -s "$TARGET_URL/api/dev-ops/test-selector?targetBranch=main~1")
+# -----------------------------
+# CALL IMPACT API
+# -----------------------------
+echo "Calling Impact Analysis API..."
 
-echo "------------------------------------------"
-echo "DEBUG: Raw API Response from Fintech App: $RESPONSE"
-echo "------------------------------------------"
+HTTP_RESPONSE=$(curl -s -w "\n%{http_code}" \
+"$TARGET_URL/api/dev-ops/test-selector?targetBranch=main~1")
 
-# 2. Extract tags
-TAGS=$(echo $RESPONSE | sed -n 's/.*"impacted_tags":\[\([^]]*\)\].*/\1/p' | sed 's/"//g')
+BODY=$(echo "$HTTP_RESPONSE" | sed '$d')
+STATUS=$(echo "$HTTP_RESPONSE" | tail -n1)
 
-# 3. Execution Logic
-if [ ! -z "$TAGS" ] && [ "$TAGS" != "null" ] && [ "$TAGS" != "" ]; then
-    echo "Impacted Tags Found: $TAGS"
-    FINAL_TAGS="$TAGS"
-else
-    echo "No impact found. Running @smoke fallback."
-    FINAL_TAGS="@smoke"
+echo "HTTP Status: $STATUS"
+echo "RAW RESPONSE: $BODY"
+
+if [ "$STATUS" != "200" ]; then
+  echo "ERROR: Impact API failed"
+  exit 1
 fi
 
-# [B] Start Isolated Test Engine Clock
+# -----------------------------
+# EXTRACT TAGS
+# -----------------------------
+TAGS=$(echo "$BODY" | jq -r '.impacted_tags | join(",")')
+
+echo "Extracted Tags: $TAGS"
+
+if [ -z "$TAGS" ] || [ "$TAGS" = "null" ]; then
+    echo "No impact found. Running @smoke fallback."
+    FINAL_TAGS="@smoke"
+else
+    FINAL_TAGS="$TAGS"
+fi
+
+echo "FINAL TAGS: $FINAL_TAGS"
+
+# -----------------------------
+# RUN TESTS
+# -----------------------------
 TEST_START=$(date +%s)
 
-# 4. Run Maven and capture output to count executions
 mvn test -Dkarate.options="--tags $FINAL_TAGS" | tee test_output.log
 TEST_EXIT_CODE=$?
 
-# [C] End Isolated Test Engine Clock
 TEST_END=$(date +%s)
 
-# --- GENERATE METRICS ARTIFACT ---
+# -----------------------------
+# METRICS
+# -----------------------------
 WORKFLOW_END=$(date +%s)
 
-# Calculate Durations
 TOTAL_DURATION=$((WORKFLOW_END - WORKFLOW_START))
 ISOLATED_TEST_DURATION=$((TEST_END - TEST_START))
 
-# Count Scenario executions
-RUN_COUNT=$(grep -c "\[print\] Executing " test_output.log || echo 0)
+RUN_COUNT=$(grep -c "\[print\] Executing" test_output.log || echo 0)
 SKIPPED_COUNT=$((TOTAL_SUITE_COUNT - RUN_COUNT))
 
-# Calculate reduction percentage
 if [ $TOTAL_SUITE_COUNT -gt 0 ]; then
     REDUCTION=$(( (SKIPPED_COUNT * 100) / TOTAL_SUITE_COUNT ))
 else
@@ -72,9 +83,9 @@ cat <<EOF > metrics.json
 }
 EOF
 
-echo "------------------------------------------"
+echo "=============================="
 echo "Reduction Rate: $REDUCTION%"
-echo "Isolated Test Time: ${ISOLATED_TEST_DURATION}s"
-echo "------------------------------------------"
+echo "Test Time: ${ISOLATED_TEST_DURATION}s"
+echo "=============================="
 
 exit $TEST_EXIT_CODE
