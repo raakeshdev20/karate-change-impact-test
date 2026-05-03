@@ -1,8 +1,28 @@
-# 🚀 Cross-Repository Impact-Based Test Selection Framework
+# 🚀 Intelligent Cross-Repository CI Optimization System using Impact-Based Test Selection
 
 ## 📌 Overview
 
-This system implements a **cross-repository intelligent test selection framework** that runs only impacted Karate tests based on code changes.
+Modern CI pipelines often execute full regression test suites even when code changes are small and localized. This leads to unnecessary compute cost, slower feedback loops, and reduced engineering efficiency—especially in microservice architectures with multiple repositories.
+
+This project introduces an Impact-Based Test Selection System that dynamically executes only the tests affected by a code change by analyzing Git diffs across repositories and mapping them to relevant test tags.
+
+Instead of running full regression suites, the system intelligently selects and executes only impacted Karate tests, while ensuring baseline coverage through a safe fallback mechanism.
+
+---
+
+### 🧠 Key Idea
+
+Reduce CI execution time by transforming Git changes into targeted test execution plans using deterministic impact mapping.
+
+---
+
+### ⚙️ Core Capabilities
+- 🔁 Cross-repository CI orchestration using GitHub Repository Dispatch
+- 🔍 Git diff analysis using JGit for file-level change detection
+- 🧠 Rule-based impact mapping (code → test tags)
+- 🧪 Dynamic Karate test selection at runtime
+- 🛡️ Safe fallback mechanism using @smoke tests
+- 📊 Execution metrics for CI performance tracking
 
 ---
 
@@ -85,7 +105,9 @@ HTTP GET /api/dev-ops/test-selector?targetBranch=main~1
 mvn test -Dkarate.options="--tags @payments,@transactions"
 ```
 
-Fallback:
+Safe Fallback
+
+If no impacted tests are detected:
 
 ```text
 bash
@@ -95,11 +117,11 @@ bash
 
 ## 📈 Metrics Output
 
-File:
+### File:
 
 metrics.json
 
-Example:
+### Example:
 
 ```text
 json
@@ -169,10 +191,22 @@ mvn test -Dkarate.options="--tags @smoke"
 ```
 
 ## 📊 Key Benefits
-- ⏱ 60–70% reduction in test execution time
+- ⏱ Observed up to 60–70% reduction in controlled scenarios
 - 💰 Reduced CI cost
-- 🧠 Intelligent impact-based test selection
+- 🚀 Faster feedback loop for developers
+- 🔁 Reduced redundant test execution
+- 🧪 Maintained regression safety via fallback coverage
 - 🔗 Cross-repository orchestration
+
+## 📌 Why This Matters
+
+In large-scale systems with multiple services and repositories, CI pipelines become a major bottleneck. Running full regression suites for every change leads to:
+
+- High infrastructure cost
+- Slow developer feedback cycles
+- Inefficient resource utilization
+
+This system demonstrates a practical approach to impact-aware CI execution without requiring complex dependency graphs or external SaaS tooling.
 
 ##  👨‍💻 Author
 
