@@ -1,28 +1,49 @@
 # 🚀 Intelligent Cross-Repository CI Optimization System using Impact-Based Test Selection
+![Status](https://img.shields.io/badge/status-proof--of--concept-orange)
+![Java](https://img.shields.io/badge/Java-17-orange)
+![Spring Boot](https://img.shields.io/badge/SpringBoot-3.x-brightgreen)
+![Karate](https://img.shields.io/badge/Karate-API%20Testing-blue)
 
-## 📌 Overview
+# ⚡ Problem Statement
 
-Modern CI pipelines often execute full regression test suites even when code changes are small and localized. This leads to unnecessary compute cost, slower feedback loops, and reduced engineering efficiency—especially in microservice architectures with multiple repositories.
+Modern CI pipelines often execute full regression suites even when code changes are small and localized.
 
-This project introduces an Impact-Based Test Selection System that dynamically executes only the tests affected by a code change by analyzing Git diffs across repositories and mapping them to relevant test tags.
+This causes:
+- unnecessary compute cost
+- slower feedback loops
+- inefficient CI resource usage
+- delayed developer productivity
 
-Instead of running full regression suites, the system intelligently selects and executes only impacted Karate tests, while ensuring baseline coverage through a safe fallback mechanism.
+especially in microservice architectures with multiple repositories.
 
 ---
 
-### 🧠 Key Idea
+# 🧠 Key Idea
 
-Reduce CI execution time by transforming Git changes into targeted test execution plans using deterministic impact mapping.
+Transform Git changes into targeted test execution plans using deterministic impact mapping.
+
+Instead of running full regression suites, the system dynamically executes only impacted Karate tests while maintaining baseline safety coverage through fallback smoke tests.
 
 ---
 
-### ⚙️ Core Capabilities
+# 📊 Controlled Scenario Results
+
+|Execution Mode | Runtime |
+|---|---|
+| Full Regression | 52s |
+| Impact-Based Execution | 18s |
+| Reduction Observed | 66% |
+
+---
+
+# ⚙️ Core Capabilities
+
 - 🔁 Cross-repository CI orchestration using GitHub Repository Dispatch
-- 🔍 Git diff analysis using JGit for file-level change detection
+- 🔍 JGit-based file-level Git diff analysis
 - 🧠 Rule-based impact mapping (code → test tags)
 - 🧪 Dynamic Karate test selection at runtime
-- 🛡️ Safe fallback mechanism using @smoke tests
-- 📊 Execution metrics for CI performance tracking
+- 🛡️ Safe fallback execution using `@smoke`
+- 📊 CI execution metrics generation
 
 ---
 
@@ -189,14 +210,14 @@ bash
 mvn test -Dkarate.options="--tags @smoke"
 
 ```
+# 📊 Key Benefits
 
-## 📊 Key Benefits
-- ⏱ Observed up to 60–70% reduction in controlled scenarios
-- 💰 Reduced CI cost
-- 🚀 Faster feedback loop for developers
-- 🔁 Reduced redundant test execution
-- 🧪 Maintained regression safety via fallback coverage
-- 🔗 Cross-repository orchestration
+- ⏱ Demonstrated up to 60–70% CI runtime reduction in controlled scenarios
+- 💰 Reduced unnecessary regression execution and CI compute usage
+- 🚀 Faster developer feedback cycles through selective test execution
+- 🔁 Minimized redundant test runs using deterministic impact mapping
+- 🧪 Maintained baseline regression safety using fallback smoke coverage
+- 🔗 Enabled cross-repository CI orchestration using GitHub Actions
 
 ## 📌 Why This Matters
 
